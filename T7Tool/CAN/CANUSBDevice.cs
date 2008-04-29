@@ -134,7 +134,16 @@ namespace T7Tool.KWP
         /// <returns>CloseResult.OK on success, otherwise CloseResult.CloseError.</returns>
         override public CloseResult close()
         {
-            int res = LAWICEL.canusb_Close(m_deviceHandle);
+            int res = 0;
+            try
+            {
+                res = LAWICEL.canusb_Close(m_deviceHandle);
+            }
+            catch(DllNotFoundException e)
+            {
+                return CloseResult.CloseError;
+            }
+
             m_deviceHandle = 0;
             if (LAWICEL.ERROR_CANUSB_OK == res)
             {

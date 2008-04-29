@@ -378,7 +378,8 @@ namespace T7Tool
         private void exitApplication()
         {
             KWPHandler.stopLogging();
-            kwpHandler.closeDevice();
+            if (kwpHandler != null)
+                kwpHandler.closeDevice();
             t7InfoHeader = null;
             canUsbDevice = null;
             kwpCanDevice = null;
