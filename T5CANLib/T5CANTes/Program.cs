@@ -20,16 +20,26 @@ namespace T5CANTest
                 System.Console.WriteLine("Could not open CAN device");
                 return;
             }
-      /*      if(!t5can.initialize())
-            {
-                System.Console.WriteLine("Could not initialize");
-                return;
-            }
-            swVersion = t5can.getSWVersion();*/
+
+            swVersion = t5can.getSWVersion();
             System.Console.WriteLine("SW version: " + swVersion);
             System.Console.WriteLine();
-           // t5can.getSymbolTable(out symbolTable);
+            //symbolTable =t5can.getSymbolTable();
+            //System.Console.WriteLine("Symbol table: " + symbolTable);
+            //System.Console.WriteLine();
 
+            byte[] ram = t5can.readRAM(0x0, 32);
+            System.Console.WriteLine("RAM: ");
+            for (int i = 0; i < ram.Length; i++)
+            {
+                if (i % 16 == 0)
+                    System.Console.WriteLine();
+                string str = Convert.ToString(ram[i], 16);
+                if (str.Length == 1)
+                    System.Console.Write("0");
+                System.Console.Write(str + " ");
+                
+            }
             Environment.Exit(0);
         }
     }
