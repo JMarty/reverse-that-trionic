@@ -26,229 +26,79 @@ namespace T5CANLib
         public bool openDevice(out string r_swVersion)
         {
             r_swVersion = "";
-            string str = "";
-            string symbolTable = "";
             m_canListener.setWaitMessageID(0x00C);
             if(m_canDevice.open() != OpenResult.OK)
                 return false;
-            initialize();
 
+            r_swVersion = getSWVersion();
 
-            r_swVersion = sendCRNLCommand("s");
-
-            symbolTable = sendCRNLCommand("S", "END" + CR + NL);
-            
-    /*        str = sendCommand(CR, ">A");
-            str = sendCommand("A", 3);
-            str = sendCommand("6", 4);
-            str = sendCommand("5", 5);
-            str = sendCommand("D", 6);
-            str = sendCommand("0", 7);
-            str = sendCommand("0", 8);
-            str = sendCommand("0", 9);
-            str = sendCommand("0", 10);
-            str = sendCommand("E", 11);
-            str = sendCommand(CR, 6);
-            str = sendCommand("B", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand(CR, ">");
-            str = sendCommand("R", ">");
-            str = sendCommand("R", ">");
-            str = sendCommand(CR, CR+NL);       
-            str = sendCommand(CR, 2);
-            str = sendCommand("A", 3);
-            str = sendCommand("6", 4);
-            str = sendCommand("5", 5);
-            str = sendCommand("D", 6);
-            str = sendCommand("E", 7);
-            str = sendCommand("0", 8);
-            str = sendCommand("0", CR+NL);
-            str = sendCommand("6", ">");
-            str = sendCommand("4", ">");
-            str = sendCommand(CR, ">");
-            str = sendCommand("B", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand(CR, ">");
-            str = sendCommand("R", ">");
-            str = sendCommand("R", ">");
-            str = sendCommand(CR, CR+NL);
-            str = sendCommand(CR, 2);
-            str = sendCommand("W", 3);
-            str = sendCommand("6", 4);
-            str = sendCommand("6", 5);
-            str = sendCommand("4", 6);
-            str = sendCommand("2", 7);
-            str = sendCommand("5", 8);
-            str = sendCommand("5", 9);
-            str = sendCommand(CR, 7);
-            str = sendCommand(CR, ">");
-            str = sendCommand("A", ">");
-            str = sendCommand("6", ">");
-            str = sendCommand("6", ">");
-            str = sendCommand("4", ">");
-            str = sendCommand("2", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("1", ">");
-            str = sendCommand(CR, ">");
-            str = sendCommand("B", ">");*/
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand("0", ">");
-            str = sendCommand(CR, ">");
-            str = sendCommand("R", ">");
-            str = sendCommand("R", ">");
-            str = sendCommand(CR, "AB"+CR+NL);
-            
             return true;
         }
 
-        public bool initialize()
+        public string getSymbolTable()
         {
-            string str = "";
-            str = sendCommand(CR, CR + NL);
-            if (str != ">AB" + CR + NL)
-            {
-                if (str.Equals(">"))
-                {
-                    str = sendCommand(CR, ">");
-                    if (!str.Equals(">"))
-                        return false;
-                }
-                else
-                {
-                    str = trimString(str);
-                    if (str.Length != 12)            //Check if received string is SW nr.
-                        findSynch();
-                }
-
-            }
-            Thread.Sleep(500);
-            return true;
+            string symbolTable = "";
+            symbolTable = sendCommand("S", 1);
+            symbolTable = sendCommand(CR, "END" + CR + NL);
+            return symbolTable;
         }
 
         public string getSWVersion()
         {
-            string str = "";
-            string tmpStr = "";
+            string r_swVersion = "";
+            r_swVersion = sendCommand("s", 1);
+            r_swVersion = sendCommand(CR, CR + NL);
+            return trimString(r_swVersion);
+        }
 
 
-            string sendString = CR + "s" + CR;
-            int i = 0;
-            sendCommandByte(sendString[i++]);
-            tmpStr = waitNoAck();
-            do
+        public byte[] readRAM(UInt16 address, uint length)
+        {
+            byte[] data = new byte[length];
+            byte[] tmpData = new byte[6];
+            uint nrOfReads = length / 6;
+            if ((length % 6) > 1)
+                nrOfReads++;
+            for (int i = 0; i < nrOfReads; i++)
             {
-                if (tmpStr.Equals(">") && (i < sendString.Length))
+                tmpData = sendReadCommand(address);
+                address += 6;
+                for (int j = 0; j < 6; j++)
                 {
-                    sendCommandByte(sendString[i++]);
-                    sendAck();
+                    if ((i * 6 + j) == length)
+                        return data;
+                    data[i * 6 + j] = tmpData[j];
                 }
-                else
-                    sendAck();
-                str += tmpStr;
-                tmpStr = waitNoAck();
-                if (tmpStr.Equals("timeout"))
-                {
-                    sendAck();
-                    tmpStr = "";
-                }
-            } while (!str.EndsWith(CR + NL));
+            }
 
-
-
-        /*    str = sendStartCRNLCommand(CR);
-            str = sendCRNLCommand("s", 3);     
-            str = sendEndCRNLCommand(CR);
-            str = trimString(str);*/
-            return str;
+            return data;
         }
 
-
-        private string sendStartCRNLCommand(string a_command)
+        private byte[] sendReadCommand(UInt16 address)
         {
-            string retString = "";
-            sendCommandByte(a_command[0]);
-            retString = waitForResponse();
-            retString = waitNoAck();
-            return retString;
-        }
+            bool timeout = false;
+            byte[] retData = new byte[6];
+            CANMessage msg = new CANMessage(0x005, 0, 8);
+            ulong cmd = 0x77C4FC00000000C7;
+            cmd |= (ulong)((byte)(address)) << 4 * 8;
+            cmd |= (ulong)((byte)(address >> 8)) << 3*8;
+            msg.setData(cmd);
+            if (!m_canDevice.sendMessage(msg))
+                throw new Exception("Couldn't send message");
+            CANMessage response = new CANMessage();
+            response = m_canListener.waitForMessage(0x00C, 1000, out timeout);
+            ulong data = response.getData();
+            for (int i = 2; i < 8; i++)
+                retData[i - 2] = (byte)(data >> i * 8);
 
-        private string sendCRNLCommand(string a_command)
-        {
-            return sendCRNLCommand(a_command, CR + NL);
+            return retData;
         }
-        private string sendCRNLCommand(string a_command, string a_endString)
-        {
-            string retString = "";
-            string str = "";
-            str += sendCommand(CR, ">");
-            str += waitNoAck();
-            str += waitNoAck(13);
-            if (!str.EndsWith(TIMEOUT))
-                return TIMEOUT;
-            sendCommandByte(a_command[0]);
-            sendAck();
-            str += waitNoAck();
-            str += waitNoAck();
-            sendAck();
-            str += waitNoAck();
-            sendCommandByte(CR[0]);
-            sendAck();
-            str += waitNoAck();
-            str += waitNoAck();
-            retString += receiveResponse(a_endString);
-            sendAck();
-            sendAck();
-            return retString;
-        }
-
-        private string sendEndCRNLCommand(string a_command)
-        {
-            string retString = "";
-            sendCommandByte(a_command[0]);
-            sendAck();
-            do
-            {
-                retString += waitForResponse();
-            } while (!retString.EndsWith(CR+NL));
-            return retString;
-        }
-
-        public bool getSymbolTable(out string r_symbolTable)
-        {
-            System.Console.WriteLine("###### Downloading symbol table ######");
-            r_symbolTable = sendCRNLCommand("S", "END");
-            return true;
-        }
-
 
         private string sendCommand(string a_command)
         {
             string retString = "";
             sendCommandByte(a_command[0]);
             retString = waitForResponse();
-            //Thread.Sleep(100);
             return retString;
         }
 
@@ -267,7 +117,7 @@ namespace T5CANLib
                 str = waitForResponse();
                 if (str.Equals(TIMEOUT))
                 {
-                    System.Console.Write(" TIMEOUT ");
+                    ////System.console.Write(" TIMEOUT ");
                     return retString;
                 }
                 retString += str;
@@ -276,31 +126,6 @@ namespace T5CANLib
             return retString;
         }
 
-        private string receiveResponse(string a_endChar)
-        {
-            string retString = "";
-            sendAck();
-            string recChar = "";
-            do
-            {
-                recChar = waitForResponse();
-                if (recChar.Equals(TIMEOUT))
-                {
-                    System.Console.Write(" TIMEOUT ");
-                        return retString;
-                }
-                retString += recChar;
-                if (!a_endChar.EndsWith(CR + NL))      //Not variable length.                
-                {
-                    if (retString.Length > a_endChar.Length)
-                    {
-                        return retString;
-                    }
-                }
-            }
-            while (!retString.EndsWith(a_endChar));
-            return retString;
-        } 
 
         private string sendCommand(string a_command, string a_endChar)        
         {            
@@ -312,7 +137,7 @@ namespace T5CANLib
                 recChar = waitForResponse();                
                 if (recChar.Equals(TIMEOUT))                
                 {                    
-                    System.Console.Write(" TIMEOUT ");                    
+                    //System.console.Write(" TIMEOUT ");                    
                     return retString;                
                 }                
                 retString += recChar;                
@@ -336,8 +161,8 @@ namespace T5CANLib
                 str = "CR";
             if(a_commandByte == 0x0A)
                 str = "NL";
-            System.Console.Write("\nCommand: " + str + a_commandByte);
-            System.Console.Write("\nResponse:");
+            //System.console.Write("\nCommand: " + str + a_commandByte);
+            //System.console.Write("\nResponse:");
             CANMessage msg = new CANMessage(0x005, 0, 8);
             ulong cmd = 0x0000000000000000;
             cmd |= (ulong)a_commandByte;
@@ -367,43 +192,17 @@ namespace T5CANLib
                 returnString = "";
                 return returnString;
             }
-            returnString += (char)(response.getData() >> 16);
-            if(returnString.Equals(CR))
-                System.Console.Write(" CR");
+            returnString += (char)((response.getData() >> 16) & 0xFF);
+           /* if(returnString.Equals(CR))
+                System.console.Write(" CR");
             else if(returnString.Equals(NL))
-                System.Console.Write(" NL\n");
+                System.console.Write(" NL\n");
             else
-                System.Console.Write(returnString);
+                System.console.Write(returnString);*/
             sendAck();
             return returnString;
         }
-
-        private string waitNoAck()
-        {
-            return waitNoAck(1000);
-        }
-
-        private string waitNoAck(uint a_timeout)
-        {
-            string returnString = "";
-            bool timeout = false;
-            CANMessage response = new CANMessage();
-            response = m_canListener.waitForMessage(0x00C, (int)a_timeout, out timeout);
-            if (timeout)
-            {
-                return TIMEOUT;
-            }
-            if ((byte)response.getData() != 0xC6)
-                throw new Exception("Error receiveing data");
-            returnString += (char)(response.getData() >> 16);
-            if (returnString.Equals(CR))
-                System.Console.Write(" CR");
-            else if (returnString.Equals(NL))
-                System.Console.Write(" NL\n");
-            else
-                System.Console.Write(returnString);
-            return returnString;
-        }
+        
 
         private void sendAck()
         {
@@ -417,7 +216,7 @@ namespace T5CANLib
 
         private void findSynch()
         {
-            System.Console.WriteLine("###### Looking for synch ######");
+            //System.console.WriteLine("###### Looking for synch ######");
             string str = "";
             char ch;
             bool timeout = false;
@@ -435,8 +234,8 @@ namespace T5CANLib
                 }
                 if ((byte)response.getData() != 0xC6)
                     throw new Exception("Error receiveing data");
-                ch = (char)(response.getData() >> 16);
-                System.Console.Write(ch);
+                ch = (char)((response.getData() >> 16) & 0xFF);
+                //System.console.Write(ch);
                 str += ch;
                 if (str.EndsWith(CR + NL + NL + NL))
                 {
