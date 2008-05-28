@@ -54,8 +54,10 @@ namespace T5CANLib
 
         public byte[] readRAM(UInt16 address, uint length)
         {
+            length += 5;                        //The gods wants us to read 5 extra bytes.
             byte[] data = new byte[length];
             byte[] tmpData = new byte[6];
+            byte[] retData = new byte[length - 5];
             uint nrOfReads = length / 6;
             if ((length % 6) > 1)
                 nrOfReads++;
@@ -66,12 +68,25 @@ namespace T5CANLib
                 for (int j = 0; j < 6; j++)
                 {
                     if ((i * 6 + j) == length)
-                        return data;
+                    {
+                        //Time to sacrifice 5 bytes to the gods.
+                        for (int k = 0; k < length - 5; k++)
+                            retData[k] = data[k + 5];
+                        return retData;
+                    }
                     data[i * 6 + j] = tmpData[j];
                 }
             }
 
-            return data;
+            //Time to sacrifice 5 bytes to the gods.
+            for (int i = 0; i < length - 5; i++)
+                retData[i] = data[i + 5];
+            return retData;
+        }
+
+        public void writeRam(UInt16 address, byte[] data)
+        {
+
         }
 
         private byte[] sendReadCommand(UInt16 address)
@@ -89,7 +104,7 @@ namespace T5CANLib
             response = m_canListener.waitForMessage(0x00C, 1000, out timeout);
             ulong data = response.getData();
             for (int i = 2; i < 8; i++)
-                retData[i - 2] = (byte)(data >> i * 8);
+                retData[7 - i] = (byte)(data >> i * 8);
 
             return retData;
         }
