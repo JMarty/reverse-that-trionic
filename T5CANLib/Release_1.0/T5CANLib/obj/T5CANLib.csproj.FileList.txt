@@ -1,0 +1,5 @@
+obj\Debug\ResolveAssemblyReference.cache
+bin\Debug\T5CANLib.dll
+bin\Debug\T5CANLib.pdb
+obj\Debug\T5CANLib.dll
+obj\Debug\T5CANLib.pdb

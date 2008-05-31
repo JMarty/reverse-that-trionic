@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T5CANLib", "T5CANLib\T5CANLib.csproj", "{5DB5BB8D-7EA1-456F-928F-7B047AB2EA28}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T5CANTest", "T5CANTes\T5CANTest.csproj", "{197EF568-6F5C-4C92-BC9E-BC7818FE24EB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5DB5BB8D-7EA1-456F-928F-7B047AB2EA28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DB5BB8D-7EA1-456F-928F-7B047AB2EA28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DB5BB8D-7EA1-456F-928F-7B047AB2EA28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DB5BB8D-7EA1-456F-928F-7B047AB2EA28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{197EF568-6F5C-4C92-BC9E-BC7818FE24EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{197EF568-6F5C-4C92-BC9E-BC7818FE24EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{197EF568-6F5C-4C92-BC9E-BC7818FE24EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{197EF568-6F5C-4C92-BC9E-BC7818FE24EB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
