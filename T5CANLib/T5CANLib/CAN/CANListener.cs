@@ -10,67 +10,39 @@ namespace T5CANLib.CAN
     /// </summary>
     class CANListener : ICANListener
     {
-        private Queue<CANMessage> m_msgQueue = new Queue<CANMessage>();
+        private CANMessage m_canMessage = new CANMessage();
         private uint m_waitMsgID = 0;
         private AutoResetEvent m_resetEvent = new AutoResetEvent(false);
-        private ICANDevice m_canDevice = null;
 
-        public void setWaitMessageID(uint a_canID)
+        public CANMessage waitForMessage(uint a_canID, int a_timeout)
         {
-            lock (m_msgQueue)
+            CANMessage retMsg;
+            lock (m_canMessage)
             {
                 m_waitMsgID = a_canID;
             }
-        }
+            m_resetEvent.WaitOne(a_timeout, false);
+            lock (m_canMessage)
+            {
+                retMsg = m_canMessage;
+            }
 
-        public void setCANDevice(ICANDevice a_canDevice)
-        {
-            lock (m_msgQueue)
-            {
-                m_canDevice = a_canDevice;
-            }
-        }
-
-        public CANMessage waitForMessage(uint a_canID, int a_timeout, out bool r_timeout)
-        {
-            r_timeout = false;
-            CANMessage retMsg = new CANMessage();
-            if (!m_resetEvent.WaitOne(a_timeout, true))
-            {
-                r_timeout = true;
-                return retMsg;
-            }
-            lock (m_msgQueue)
-            {
-                retMsg = m_msgQueue.Dequeue(); 
-            }
-            
             return retMsg;
-        }
-
-        private void sendAck()
-        {
-            CANMessage ack = new CANMessage(0x006, 0, 2);
-            ack.setData(0x00000000000000C6);
-            if (!m_canDevice.sendMessage(ack))
-                throw new Exception("Couldn't send message");
         }
 
         override public void handleMessage(CANMessage a_message)
         {
-            CANMessage canMessage = new CANMessage();
-            lock (m_msgQueue)
+            bool messageReceived = false;
+            lock (m_canMessage)
             {
-                canMessage.setData(a_message.getData());
-                canMessage.setFlags(a_message.getFlags());
-                canMessage.setID(a_message.getID());
-                canMessage.setLength(a_message.getLength());
-                canMessage.setTimeStamp(a_message.getTimeStamp());
-                m_msgQueue.Enqueue(canMessage);
-                m_resetEvent.Set();
-              //  sendAck();
+                if (a_message.getID() == m_waitMsgID)
+                {
+                    m_canMessage = a_message;
+                    messageReceived = true;
+                }
             }
+            if(messageReceived)
+                m_resetEvent.Set();
         }
-
     }
 }

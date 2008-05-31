@@ -25,33 +25,50 @@ namespace T5CANTest
             swVersion = t5can.getSWVersion();
             System.Console.WriteLine("SW version: " + swVersion);
             System.Console.WriteLine();
-            System.Console.WriteLine("Fetching symbol table...");
+           /* System.Console.WriteLine("Fetching symbol table...");
             symbolTable =t5can.getSymbolTable();
             System.Console.WriteLine("Symbol table: " + symbolTable);
-            System.Console.WriteLine();
+            System.Console.WriteLine();*/
 
-            UInt16 length = 32 * 1024;
-            string fileName = "dumpram.bin";
-            System.Console.WriteLine("Dumping 32 kB of RAM to dumpram.bin: ");
-            byte[] ram = t5can.readRAM(0x0000, length);
+            UInt16 length = 32;
+            /* string fileName = "dumpram.bin";
+             System.Console.WriteLine("Dumping 32 kB of RAM to dumpram.bin: ");
+             byte[] ram = t5can.readRAM(0x0000, length);
+            
             
 
-            if (File.Exists(fileName))
-                File.Delete(fileName);
-            FileStream fileStream = File.Create(fileName, length);
-            fileStream.Write(ram, 0, length);
-            fileStream.Close();
-           /* for (int i = 0; i < ram.Length; i++)
+
+             if (File.Exists(fileName))
+                 File.Delete(fileName);
+             FileStream fileStream = File.Create(fileName, length);
+             fileStream.Write(ram, 0, length);
+             fileStream.Close();*/
+            UInt16 address = 0x1000;
+            byte[] ram = t5can.readRAM(address, 128);
+            Program.printByteArray(ram);
+            byte[] writeRam = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+
+            t5can.writeRam(address, writeRam);
+            System.Console.WriteLine();
+
+            ram = t5can.readRAM(address, 128);
+            Program.printByteArray(ram);
+
+            Environment.Exit(0);
+        }
+
+        static private void printByteArray(byte[] array)
+        {
+            for (int i = 0; i < array.Length; i++)
             {
                 if (i % 16 == 0)
                     System.Console.WriteLine();
-                string str = Convert.ToString(ram[i], 16);
+                string str = Convert.ToString(array[i], 16);
                 if (str.Length == 1)
                     System.Console.Write("0");
                 System.Console.Write(str + " ");
-                
-            }*/
-            Environment.Exit(0);
+
+            }
         }
     }
 }

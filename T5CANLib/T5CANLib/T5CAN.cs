@@ -20,18 +20,13 @@ namespace T5CANLib
             if(m_canListener == null)
                 m_canListener = new CANListener();
             m_canDevice.addListener(m_canListener);
-            m_canListener.setCANDevice(m_canDevice);
         }
 
         public bool openDevice(out string r_swVersion)
         {
             r_swVersion = "";
-            m_canListener.setWaitMessageID(0x00C);
             if(m_canDevice.open() != OpenResult.OK)
                 return false;
-
-            r_swVersion = getSWVersion();
-
             return true;
         }
 
@@ -84,14 +79,55 @@ namespace T5CANLib
             return retData;
         }
 
-        public void writeRam(UInt16 address, byte[] data)
+        /// <summary>
+        /// Write a byte array to an address.
+        /// </summary>
+        /// <param name="address">Address. Must be greater than 0x1000</param>
+        /// <param name="data">Data to be written</param>
+        /// <returns></returns>
+        public bool writeRam(UInt16 address, byte[] data)
         {
+           /* if (address < 0x1000)
+                throw new Exception("Invalid address");*/
+            UInt16 sendAddress = address;
+            for (int i = 0; i < data.Length; i++)
+            {
+                sendWriteCommand(sendAddress++, data[i]);
+            }
+            return true;
+        }
 
+        private bool sendWriteCommand(UInt16 address, byte data)
+        {
+            string addr = Convert.ToString(address, 16);
+            addr = addr.ToUpper();
+            string sendData = Convert.ToString(data, 16);
+            while(addr.Length < 4)
+                addr = "0" + addr;
+            if (sendData.Length < 2)
+                sendData = "0" + sendData;
+            sendCommandByteForRead("W"[0]);
+            waitNoAck();
+            sendCommandByteForRead(addr.Substring(0, 1)[0]);
+            waitNoAck();
+            sendCommandByteForRead(addr.Substring(1, 1)[0]);
+            waitNoAck();
+            sendCommandByteForRead(addr.Substring(2, 1)[0]);
+            waitNoAck();
+            sendCommandByteForRead(addr.Substring(3, 1)[0]);
+            waitNoAck();
+            sendCommandByteForRead(sendData.Substring(0, 1)[0]);
+            waitNoAck();
+            sendCommandByteForRead(sendData.Substring(1, 1)[0]);
+            waitNoAck();
+            sendCommandByteForRead(CR[0]);
+            waitNoAck(); 
+
+            return true;
         }
 
         private byte[] sendReadCommand(UInt16 address)
         {
-            bool timeout = false;
             byte[] retData = new byte[6];
             CANMessage msg = new CANMessage(0x005, 0, 8);
             ulong cmd = 0x77C4FC00000000C7;
@@ -101,7 +137,7 @@ namespace T5CANLib
             if (!m_canDevice.sendMessage(msg))
                 throw new Exception("Couldn't send message");
             CANMessage response = new CANMessage();
-            response = m_canListener.waitForMessage(0x00C, 1000, out timeout);
+            response = m_canListener.waitForMessage(0x00C, 1000);
             ulong data = response.getData();
             for (int i = 2; i < 8; i++)
                 retData[7 - i] = (byte)(data >> i * 8);
@@ -132,12 +168,10 @@ namespace T5CANLib
                 str = waitForResponse();
                 if (str.Equals(TIMEOUT))
                 {
-                    ////System.console.Write(" TIMEOUT ");
                     return retString;
                 }
                 retString += str;
             }
-            //Thread.Sleep(100);
             return retString;
         }
 
@@ -151,8 +185,7 @@ namespace T5CANLib
             {                
                 recChar = waitForResponse();                
                 if (recChar.Equals(TIMEOUT))                
-                {                    
-                    //System.console.Write(" TIMEOUT ");                    
+                {                                     
                     return retString;                
                 }                
                 retString += recChar;                
@@ -170,14 +203,6 @@ namespace T5CANLib
 
         private void sendCommandByte(char a_commandByte)
         {
-            //Thread.Sleep(100);
-            string str = "";
-            if(a_commandByte == 0x0D)
-                str = "CR";
-            if(a_commandByte == 0x0A)
-                str = "NL";
-            //System.console.Write("\nCommand: " + str + a_commandByte);
-            //System.console.Write("\nResponse:");
             CANMessage msg = new CANMessage(0x005, 0, 8);
             ulong cmd = 0x0000000000000000;
             cmd |= (ulong)a_commandByte;
@@ -185,9 +210,25 @@ namespace T5CANLib
             cmd |= (ulong)0xC4;
             cmd |= 0xFFFFFFFFFFFF0000;
             msg.setData(cmd);
+            uint nrOfResends = 0;
+            while (!m_canDevice.sendMessage(msg))
+            {
+                if(nrOfResends++ > 50000)
+                    throw new Exception("Couldn't send message"); ;
+            }
+        }
+
+        private void sendCommandByteForRead(char a_commandByte)
+        {
+            CANMessage msg = new CANMessage(0x006, 0, 2);
+            ulong cmd = 0x0000000000000000;
+            cmd |= (ulong)a_commandByte;
+            cmd <<= 8;
+            cmd |= (ulong)0xC4;
+            msg.setData(cmd);
             if (!m_canDevice.sendMessage(msg))
                 throw new Exception("Couldn't send message");
-            
+
         }
 
         private string waitForResponse()
@@ -195,7 +236,7 @@ namespace T5CANLib
             string returnString = "";
             bool timeout = false;
             CANMessage response = new CANMessage();
-            response = m_canListener.waitForMessage(0x00C, 1000, out timeout);
+            response = m_canListener.waitForMessage(0x00C, 1000);
             if (timeout)
             {
                 return TIMEOUT;
@@ -208,13 +249,28 @@ namespace T5CANLib
                 return returnString;
             }
             returnString += (char)((response.getData() >> 16) & 0xFF);
-           /* if(returnString.Equals(CR))
-                System.console.Write(" CR");
-            else if(returnString.Equals(NL))
-                System.console.Write(" NL\n");
-            else
-                System.console.Write(returnString);*/
             sendAck();
+            return returnString;
+        }
+
+        private string waitNoAck()
+        {
+            string returnString = "";
+            bool timeout = false;
+            CANMessage response = new CANMessage();
+            response = m_canListener.waitForMessage(0x00C, 1000);
+            if (timeout)
+            {
+                return TIMEOUT;
+            }
+            if ((byte)response.getData() != 0xC6)
+                throw new Exception("Error receiveing data");
+            if (response.getLength() < 8)
+            {
+                returnString = "";
+                return returnString;
+            }
+            returnString += (char)((response.getData() >> 16) & 0xFF);
             return returnString;
         }
         
@@ -242,7 +298,7 @@ namespace T5CANLib
             {
                 if (!m_canDevice.sendMessage(ack))
                     throw new Exception("Couldn't send message");
-                response = m_canListener.waitForMessage(0x00C, 1000, out timeout);
+                response = m_canListener.waitForMessage(0x00C, 1000);
                 if (timeout)
                 {
                     return;
@@ -250,7 +306,6 @@ namespace T5CANLib
                 if ((byte)response.getData() != 0xC6)
                     throw new Exception("Error receiveing data");
                 ch = (char)((response.getData() >> 16) & 0xFF);
-                //System.console.Write(ch);
                 str += ch;
                 if (str.EndsWith(CR + NL + NL + NL))
                 {
