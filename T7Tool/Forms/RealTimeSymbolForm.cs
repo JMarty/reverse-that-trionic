@@ -27,6 +27,8 @@ namespace T7Tool.Forms
         private InfoFormStatic m_infoForm = new InfoFormStatic();
         private bool m_readingSymbolsStarted = false;
         string m_filename = "";
+        private bool m_doingChange = false;
+
         public RealTimeSymbolForm()
         {
             InitializeComponent();
@@ -119,6 +121,8 @@ namespace T7Tool.Forms
 
         public void symbolInfo(Object stateInfo)
         {
+            if (m_doingChange)
+                return;
             updateSymbol();
         }
 
@@ -137,5 +141,23 @@ namespace T7Tool.Forms
         {
 
         }
+
+        private void hexBox_ChangeComplete(object sender, KeyEventArgs e)
+        {
+            if (!e.KeyData.Equals(Keys.Enter))
+                return;
+            byte[] bytes = new byte[m_dynamicByteProvider.Length];
+            for (int i = 0; i < m_dynamicByteProvider.Length; i++)
+                bytes[i] = m_dynamicByteProvider.ReadByte(i);
+            KWPHandler.getInstance().writeSymbolRequest((uint)symbolListBox.SelectedIndex, bytes);
+            m_doingChange = false;
+        }
+
+
+        private void hexBox_Change(object sender, EventArgs e)
+        {
+            m_doingChange = true;
+        }
+
     }
 }

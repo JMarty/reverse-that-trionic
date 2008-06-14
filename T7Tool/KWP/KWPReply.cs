@@ -110,7 +110,17 @@ namespace T7Tool.KWP
         /// <returns>Byte array representing the KWP reply.</returns>
         public byte[] getData()
         {
-            byte[] data = new byte[getLength() - m_nrOfPid - 1];
+            uint length = 0;
+            if (getLength() == 1)
+                length = 1;
+            else
+                length = getLength() - m_nrOfPid - 1;
+            byte[] data = new byte[length];
+            if (length == 1)
+            {
+                data[0] = m_reply[1];
+                return data;
+            }
             uint i;
             if (m_nrOfPid == 1)
                 i = 3;

@@ -492,8 +492,8 @@ namespace T7Tool.KWP
         /// This method writes to a symbol in RAM.
         /// The ECU must not be write protected for this to work.
         /// </summary>
-        /// <param name="a_address">The address to start reading from [0..0xFFFF-1].</param>
-        /// <param name="a_length">The total length to read.</param>
+        /// <param name="a_symbolNumber">Symbol number to write to.</param>
+        /// <param name="a_data">Data to write.</param> 
         /// <returns></returns>
         public bool writeSymbolRequest(uint a_symbolNumber, byte[] a_data)
         {
@@ -503,10 +503,13 @@ namespace T7Tool.KWP
             //First two bytes should be the symbol number
             symbolNumberAndData[0] = (byte)(a_symbolNumber >> 8);
             symbolNumberAndData[1] = (byte)(a_symbolNumber);
-            for (int i = 2; i < symbolNumberAndData.Length; i++)
-                symbolNumberAndData[i] = a_data[i - 2];
-            result = sendRequest(new KWPRequest(0x3D, 0x80, 0x00, symbolNumberAndData), out reply);
-            if (result == KWPResult.OK)
+            symbolNumberAndData[2] = (byte)(0);
+            for (int i = 0; i < a_data.Length; i++)
+                symbolNumberAndData[i + 3] = a_data[i];
+            result = sendRequest(new KWPRequest(0x3D, 0x80, symbolNumberAndData), out reply);
+            if (result != KWPResult.OK)
+                return false;
+            if (reply.getData()[0] == 0x7D)
                 return true;
             else
                 return false;

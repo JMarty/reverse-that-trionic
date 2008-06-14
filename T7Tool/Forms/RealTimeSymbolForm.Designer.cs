@@ -86,6 +86,10 @@ namespace T7Tool.Forms
             this.hexBox.StringViewVisible = true;
             this.hexBox.TabIndex = 0;
             this.hexBox.UseFixedBytesPerLine = true;
+            this.hexBox.Click += new System.EventHandler(this.hexBox_Change);
+            this.hexBox.Enter += new System.EventHandler(this.hexBox_Change);
+            this.hexBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.hexBox_ChangeComplete);
+
             // 
             // twoDTabPage
             // 
@@ -157,8 +161,8 @@ namespace T7Tool.Forms
             this.Controls.Add(this.symbolListBox);
             this.Name = "RealTimeSymbolForm";
             this.Text = "Real Time Tuning";
-            this.Disposed += new System.EventHandler(this.RealTimeSymbolForm_Disposed);
             this.Load += new System.EventHandler(this.RealTimeSymbolForm_Load);
+            this.Disposed += new System.EventHandler(this.RealTimeSymbolForm_Disposed);
             this.dataTabControl.ResumeLayout(false);
             this.hexTabPage.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
