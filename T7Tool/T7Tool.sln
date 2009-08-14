@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T7Tool", "T7Tool.csproj", "{9C82AC4D-D4DF-48E9-9D79-241CBF0B45E6}"
 EndProject
 Global
