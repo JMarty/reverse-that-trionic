@@ -383,6 +383,8 @@ namespace T7Tool.Flasher
                                 return;
                         }
                     }
+                    fs.Flush();
+                    fs.Close();
                 }
                 m_flashStatus = FlashStatus.Completed;
             }

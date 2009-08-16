@@ -409,6 +409,8 @@ namespace T7Tool.KWP
             //PID = no PID used by this request
             //Expected result = 0x7E
             result = sendRequest(new KWPRequest(0x3E), out reply);
+            if (result == KWPResult.Timeout)
+                return result;
             if (reply.getMode() != 0x7E)
                 return KWPResult.NOK;
             else
@@ -432,6 +434,8 @@ namespace T7Tool.KWP
             //Data = data to be flashed
             //Expected result = 0x71
             result = sendRequest(new KWPRequest(0x31, 0x50), out reply);
+            if (result == KWPResult.Timeout)
+                return result;
             if (reply.getMode() != 0x71)
                 return KWPResult.NOK;
             else
@@ -458,6 +462,8 @@ namespace T7Tool.KWP
             lengthAndAddress[3] = (byte)(a_address >> 8);
             lengthAndAddress[4] = (byte)(a_address);
             result = sendRequest(new KWPRequest(0x2C, 0xF0, 0x03, lengthAndAddress), out reply);
+            if (result == KWPResult.Timeout)
+                return false;
             if (result == KWPResult.OK)
                 return true;
             else
@@ -542,6 +548,11 @@ namespace T7Tool.KWP
             KWPReply reply = new KWPReply();
             KWPResult result;
             result = sendRequest(new KWPRequest(0x21, 0xF0), out reply);
+            if (result == KWPResult.Timeout)
+            {
+                r_data = reply.getData();
+                return false;
+            }
             r_data = reply.getData();
             if (result == KWPResult.OK)
                 return true;
@@ -581,7 +592,7 @@ namespace T7Tool.KWP
             a_reply = new KWPReply();
             if(stateTimer == null)
                 stateTimer = new System.Threading.Timer(sendKeepAlive, new Object(), 1000, 1000);
-            stateTimer.Change(1000, 1000);
+            stateTimer.Change(10000, 1000);
             m_requestMutex.WaitOne();
             if (!m_kwpDevice.isOpen())
                 return KWPResult.DeviceNotConnected;
@@ -598,6 +609,7 @@ namespace T7Tool.KWP
                     m_logFileStream.Flush();
                 }
                 m_requestMutex.ReleaseMutex();
+                stateTimer.Change(1000, 1000);
                 return KWPResult.OK;
             }
             else
@@ -605,6 +617,7 @@ namespace T7Tool.KWP
                 if (m_logginEnabled)
                     m_logFileStream.WriteLine("Timeout");
                 m_requestMutex.ReleaseMutex();
+                stateTimer.Change(1000, 1000);
                 return KWPResult.Timeout;
             }
         }

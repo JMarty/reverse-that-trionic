@@ -31,6 +31,7 @@ namespace T7Tool.KWP
         public CANUSBDevice()
         {
             m_readThread = new Thread(readMessages);
+            m_readThread.Priority = ThreadPriority.Highest;
         }
 
         /// <summary>

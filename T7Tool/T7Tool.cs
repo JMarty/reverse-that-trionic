@@ -262,6 +262,8 @@ namespace T7Tool
         {
 
             kwpDeviceConnectionStatus.Text = "Connecting";
+            kwpDeviceConnectionStatus.Refresh();
+            Thread.Sleep(100);
             if (kwpDeviceComboBox.SelectedItem.ToString() == "Lawicel CANUSB")
             {
                 kwpCanDevice.setCANDevice(canUsbDevice);
@@ -299,7 +301,8 @@ namespace T7Tool
             m_connectedToECU = true;
             stateTimer = new System.Threading.Timer(timerDelegate, new Object(), 0, 250);
             populateECUTab();
-
+            kwpDeviceOpenButton.Enabled = false;
+            
         }
 
         private void populateECUTab()
