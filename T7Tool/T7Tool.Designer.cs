@@ -730,8 +730,7 @@ namespace T7Tool
             // 
             this.kwpDeviceComboBox.FormattingEnabled = true;
             this.kwpDeviceComboBox.Items.AddRange(new object[] {
-            "Lawicel CANUSB",
-            "ELM327 1.2"});
+            "Lawicel CANUSB"});
             this.kwpDeviceComboBox.Location = new System.Drawing.Point(17, 27);
             this.kwpDeviceComboBox.Name = "kwpDeviceComboBox";
             this.kwpDeviceComboBox.Size = new System.Drawing.Size(121, 21);
@@ -771,8 +770,8 @@ namespace T7Tool
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "T7Tool";
             this.Text = "T7Tool";
-            this.Disposed += new System.EventHandler(this.T7Tool_Disposed);
             this.Load += new System.EventHandler(this.T7Tool_Load);
+            this.Disposed += new System.EventHandler(this.T7Tool_Disposed);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ECUTabControl.ResumeLayout(false);
