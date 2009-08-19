@@ -93,6 +93,8 @@ namespace T7Tool
             this.getIDFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.flashFileDialog = new System.Windows.Forms.SaveFileDialog();
+            this.techToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.e85ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.ECUTabControl.SuspendLayout();
             this.fileInfoPage.SuspendLayout();
@@ -107,6 +109,7 @@ namespace T7Tool
             this.fileToolStripMenuItem,
             this.tuneToolStripMenuItem,
             this.LogStripMenuItem,
+            this.techToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -730,7 +733,9 @@ namespace T7Tool
             // 
             this.kwpDeviceComboBox.FormattingEnabled = true;
             this.kwpDeviceComboBox.Items.AddRange(new object[] {
-            "Lawicel CANUSB"});
+            "Lawicel CANUSB",
+            "ELM327 1.2",
+            "K-Line"});
             this.kwpDeviceComboBox.Location = new System.Drawing.Point(17, 27);
             this.kwpDeviceComboBox.Name = "kwpDeviceComboBox";
             this.kwpDeviceComboBox.Size = new System.Drawing.Size(121, 21);
@@ -759,6 +764,21 @@ namespace T7Tool
             // 
             this.flashFileDialog.Title = "Select file";
             this.flashFileDialog.FileOk += new System.ComponentModel.CancelEventHandler(this.flashFileDialog_FileOk);
+            // 
+            // techToolStripMenuItem
+            // 
+            this.techToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.e85ToolStripMenuItem});
+            this.techToolStripMenuItem.Name = "techToolStripMenuItem";
+            this.techToolStripMenuItem.Size = new System.Drawing.Size(42, 20);
+            this.techToolStripMenuItem.Text = "Tech";
+            // 
+            // e85ToolStripMenuItem
+            // 
+            this.e85ToolStripMenuItem.Name = "e85ToolStripMenuItem";
+            this.e85ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.e85ToolStripMenuItem.Text = "E85";
+            this.e85ToolStripMenuItem.Click += new System.EventHandler(this.e85ToolStripMenuItem_Click);
             // 
             // T7Tool
             // 
@@ -854,6 +874,8 @@ namespace T7Tool
         private System.Windows.Forms.ToolStripMenuItem kWPToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tuneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem eCUToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem techToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem e85ToolStripMenuItem;
     }
 }
 

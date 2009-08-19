@@ -118,7 +118,7 @@ namespace T7Tool.KWP
             byte[] data = new byte[length];
             if (length == 1)
             {
-                data[0] = m_reply[1];
+                data[0] = m_reply[2 + m_nrOfPid];
                 return data;
             }
             uint i;

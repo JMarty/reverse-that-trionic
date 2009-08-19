@@ -164,6 +164,104 @@ namespace T7Tool.KWP
         }
 
         /// <summary>
+        /// Get E85 adaption status.
+        /// </summary>
+        /// <param name="r_vin">The adaptino status for E85 [.</param>
+        /// <returns>KWPResult</returns>
+        public KWPResult getE85AdaptionStatus(out string r_status)
+        {
+            KWPReply reply = new KWPReply();
+            KWPResult result;
+            r_status = "Error";
+            result = sendRequest(new KWPRequest(0x21, 0xA5), out reply);
+            if (result == KWPResult.OK)
+            {
+                byte[] res = reply.getData();
+                if(reply.getData()[0] == 1)
+                    r_status = "Forced";
+                if(reply.getData()[0] == 2)
+                    r_status = "Ongoing";
+                if(reply.getData()[0] == 3)
+                    r_status = "Completed";
+                if(reply.getData()[0] == 4)
+                    r_status = "Unknown";
+                if(reply.getData()[0] == 5)
+                    r_status = "Not started";
+                return KWPResult.OK;
+            }
+            else
+            {
+                r_status = "";
+                return KWPResult.Timeout;
+            }
+        }
+
+        /// <summary>
+        /// Force adaption for E85.
+        /// </summary>
+        /// <returns>KWPResult</returns>
+        public KWPResult forceE85Adaption()
+        {
+            KWPReply reply = new KWPReply();
+            KWPResult result;
+            byte[] data = new byte[2]; data[0] = 0; data[1] = 0;
+            result = sendRequest(new KWPRequest(0x3B, 0xA6, data), out reply);
+            if (result != KWPResult.OK)
+                return result;
+            byte[] data2 = new byte[1]; data2[0] = 1; 
+            result = sendRequest(new KWPRequest(0x3B, 0xA5, data2), out reply);
+            return result;
+        }
+
+        /// <summary>
+        /// This method requests the E85 level.
+        /// </summary>
+        /// <param name="r_level">The requested E85 level.</param>
+        /// <returns>KWPResult</returns>
+        public KWPResult getE85Level(out int r_level)
+        {
+            KWPReply reply = new KWPReply();
+            KWPResult result;
+            int level;
+            result = sendRequest(new KWPRequest(0x21, 0xA7), out reply);
+            if (result == KWPResult.OK)
+            {
+                level = (reply.getData()[0] << 8) | reply.getData()[1];
+                r_level = level / 10;
+                return KWPResult.OK;
+            }
+            else
+            {
+                r_level = 0;
+                return KWPResult.Timeout;
+            }
+        }
+
+        /// <summary>
+        /// This method sets the E85 level.
+        /// </summary>
+        /// <param name="a_level">The E85 level.</param>
+        /// <returns>KWPResult</returns>
+        public KWPResult setE85Level(int a_level)
+        {
+            KWPReply reply = new KWPReply();
+            KWPResult result;
+            int sendlevel = a_level * 10;
+            byte[] level = new byte[2];
+            level[0] = (byte)(sendlevel >> 8);
+            level[1] = (byte)sendlevel;
+            result = sendRequest(new KWPRequest(0x3B, 0xA7, level), out reply);
+            if (result == KWPResult.OK)
+            {
+                return KWPResult.OK;
+            }
+            else
+            {
+                return KWPResult.Timeout;
+            }
+        }
+
+        /// <summary>
         /// This method sends a request for the immobilizer ID.
         /// </summary>
         /// <param name="r_immo">The requested immo ID.</param>

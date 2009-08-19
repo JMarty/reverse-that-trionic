@@ -17,9 +17,11 @@ namespace T7Tool
     public partial class T7Tool : Form
     {
         private Forms.RealTimeSymbolForm realTimeSymbolForm;
+        private Forms.E85Form e85Form;
         private T7FileHeader t7InfoHeader = null;
         private CANUSBDevice canUsbDevice = null;
         private ELM327Device m_elm327Device = null;
+        private KLineDevice m_kLineDevice = null;
         private KWPCANDevice kwpCanDevice = null;
         private KWPHandler kwpHandler = null;
         private T7Flasher m_t7Flasher = null;
@@ -277,6 +279,13 @@ namespace T7Tool
                 KWPHandler.setKWPDevice(m_elm327Device);
 
             }
+            else if (kwpDeviceComboBox.SelectedItem.ToString() == "K-Line")
+            {
+                if (m_kLineDevice == null)
+                    m_kLineDevice = new KLineDevice();
+                KWPHandler.setKWPDevice(m_kLineDevice);
+
+            }
 
             kwpHandler = KWPHandler.getInstance();
             T7Flasher.setKWPHandler(kwpHandler);
@@ -311,6 +320,7 @@ namespace T7Tool
             string immo;
             string engineType;
             string swVersion;
+            int e85level;
             KWPResult res = kwpHandler.getVIN(out vin);
             if (res == KWPResult.OK)
                 ecuVINTextBox.Text = vin;
@@ -447,6 +457,13 @@ namespace T7Tool
         private void kwpDeviceComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void e85ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(e85Form == null)
+                e85Form = new E85Form();
+            e85Form.Show();
         }
 
     }

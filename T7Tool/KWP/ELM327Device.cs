@@ -28,10 +28,12 @@ namespace T7Tool.KWP
         public bool startSession()
         {
             string str = "";
-            m_serialPort.Write("AT IIA 11\r"); //Set ISO init address to 0x11
-            m_serialPort.ReadTo(">");
 
-            m_serialPort.Write("AT SH CF A1 F1\r");    //Set header
+            //TODO set protocol
+            m_serialPort.Write("AT SP 5\r");
+            str = m_serialPort.ReadTo(">");
+
+            m_serialPort.Write("AT SH 80 11 F1\r");    //Set header
             str = m_serialPort.ReadTo(">");
             return true;
         }

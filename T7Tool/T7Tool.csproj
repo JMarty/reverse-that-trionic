@@ -30,12 +30,12 @@
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
+    <MapFileExtensions>false</MapFileExtensions>
     <ProductName>T7Tool</ProductName>
     <PublisherName>T7Tool</PublisherName>
-    <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>8</ApplicationRevision>
-    <ApplicationVersion>1.1.0.%2a</ApplicationVersion>
+    <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -81,6 +81,12 @@
     <Compile Include="CAN\ICANDevice.cs" />
     <Compile Include="ChecksumHandler.cs" />
     <Compile Include="CAN\CANUSBDevice.cs" />
+    <Compile Include="Forms\E85Form.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\E85Form.Designer.cs">
+      <DependentUpon>E85Form.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\InfoFormOK.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -94,6 +100,7 @@
       <DependentUpon>InfoFormStatic.cs</DependentUpon>
     </Compile>
     <Compile Include="KWP\ELM327Device.cs" />
+    <Compile Include="KWP\KLineDevice.cs" />
     <Compile Include="Parser\Symbol.cs" />
     <Compile Include="Parser\SymbolMapParser.cs" />
     <Compile Include="Parser\T7FileParser.cs" />
@@ -125,6 +132,9 @@
     <EmbeddedResource Include="AboutBox.resx">
       <SubType>Designer</SubType>
       <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\E85Form.resx">
+      <DependentUpon>E85Form.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\InfoFormOK.resx">
       <SubType>Designer</SubType>
