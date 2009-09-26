@@ -210,7 +210,7 @@ namespace T7Tool.Flasher
                 //ECU if we alredy have security access (from a previous, interrupted, session).
                 if (m_command == FlashCommand.ReadCommand)
                 {
-                    int nrOfBytes = 64;
+                    int nrOfBytes = 240;
                     byte[] data;
 
                     if(File.Exists(m_fileName))
@@ -286,7 +286,7 @@ namespace T7Tool.Flasher
                     if (File.Exists(m_fileName))
                         File.Delete(m_fileName);
                     FileStream fileStream = File.Create(m_fileName, 1024);
-                    if(m_kwpHandler.sendUnknownRequest() != KWPResult.OK)
+                    if(m_kwpHandler.testerPresent() != KWPResult.OK)
                     {
                         m_flashStatus = FlashStatus.ReadError;
                         continue;
@@ -318,7 +318,7 @@ namespace T7Tool.Flasher
                 }
                 else if (m_command == FlashCommand.WriteCommand)
                 {
-                    int nrOfBytes = 128;
+                    int nrOfBytes = 7;// 128;
                     int i = 0;
                     byte[] data = new byte[nrOfBytes];
                     if (!File.Exists(m_fileName))

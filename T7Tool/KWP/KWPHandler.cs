@@ -56,7 +56,7 @@ namespace T7Tool.KWP
 
         public void sendKeepAlive(Object stateInfo)
         {
-            sendUnknownRequest();
+            testerPresent();
         }
 
 
@@ -494,10 +494,10 @@ namespace T7Tool.KWP
         }
 
         /// <summary>
-        /// Send unknown request
+        /// Tester present. Keep alive message.
         /// </summary>
         /// <returns>KWPResult</returns>
-        public KWPResult sendUnknownRequest()
+        public KWPResult testerPresent()
         {
             KWPReply reply = new KWPReply();
             KWPResult result;
@@ -648,7 +648,7 @@ namespace T7Tool.KWP
             result = sendRequest(new KWPRequest(0x21, 0xF0), out reply);
             if (result == KWPResult.Timeout)
             {
-                r_data = reply.getData();
+                r_data = new byte[1];
                 return false;
             }
             r_data = reply.getData();
@@ -695,13 +695,19 @@ namespace T7Tool.KWP
             if (!m_kwpDevice.isOpen())
                 return KWPResult.DeviceNotConnected;
             if (m_logginEnabled)
+            {
+                DateTime time = DateTime.Now;
+                m_logFileStream.Write(time.Hour + ":" + time.Minute + ":" + time.Second + ":" + time.Millisecond + " ");
                 m_logFileStream.WriteLine(a_request.ToString());
+            }
             result = m_kwpDevice.sendRequest(a_request, out reply);
             a_reply = reply;
             if (result == RequestResult.NoError)
             {
                 if (m_logginEnabled)
                 {
+                    DateTime time = DateTime.Now;
+                    m_logFileStream.Write(time.Hour + ":" + time.Minute + ":" + time.Second + ":" + time.Millisecond + " ");
                     m_logFileStream.WriteLine(reply.ToString());
                     m_logFileStream.WriteLine();
                     m_logFileStream.Flush();
@@ -713,7 +719,11 @@ namespace T7Tool.KWP
             else
             {
                 if (m_logginEnabled)
+                {
+                    DateTime time = DateTime.Now;
+                    m_logFileStream.Write(time.Hour + ":" + time.Minute + ":" + time.Second + ":" + time.Millisecond + " ");
                     m_logFileStream.WriteLine("Timeout");
+                }
                 m_requestMutex.ReleaseMutex();
                 stateTimer.Change(1000, 1000);
                 return KWPResult.Timeout;

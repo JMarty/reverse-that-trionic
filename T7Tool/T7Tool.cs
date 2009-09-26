@@ -18,6 +18,7 @@ namespace T7Tool
     {
         private Forms.RealTimeSymbolForm realTimeSymbolForm;
         private Forms.E85Form e85Form;
+        private Forms.SelectSerialPort m_serialPortForm;
         private T7FileHeader t7InfoHeader = null;
         private CANUSBDevice canUsbDevice = null;
         private ELM327Device m_elm327Device = null;
@@ -208,7 +209,7 @@ namespace T7Tool
         public void flasherInfo(Object stateInfo)
         {
             Control.CheckForIllegalCrossThreadCalls = false;
-            flashNrOfBytesLabel.Text = "" + m_t7Flasher.getNrOfBytesRead() / 1024;
+            flashNrOfBytesLabel.Text = "" + m_t7Flasher.getNrOfBytesRead();
             switch (m_t7Flasher.getStatus())
             {
                 case T7Flasher.FlashStatus.Completed:
@@ -270,14 +271,17 @@ namespace T7Tool
             {
                 kwpCanDevice.setCANDevice(canUsbDevice);
                 KWPHandler.setKWPDevice(kwpCanDevice);
+                return;
                 
             }
             else if (kwpDeviceComboBox.SelectedItem.ToString() == "ELM327 1.2")
             {
-                if (m_elm327Device == null)
-                    m_elm327Device = new ELM327Device();
-                KWPHandler.setKWPDevice(m_elm327Device);
-
+                
+                if (m_serialPortForm == null)
+                    m_serialPortForm = new SelectSerialPort();
+                m_serialPortForm.setCallbackObject(this);
+                m_serialPortForm.Show();
+                
             }
             else if (kwpDeviceComboBox.SelectedItem.ToString() == "K-Line")
             {
@@ -287,6 +291,24 @@ namespace T7Tool
 
             }
 
+        }
+
+        public void startELM327()
+        {
+            m_serialPortForm.Hide();
+            this.Show();
+            this.Update();
+            if (m_elm327Device == null)
+                m_elm327Device = new ELM327Device();
+            m_elm327Device.setPort(m_serialPortForm.getPortName());
+            m_elm327Device.setPortSpeed(m_serialPortForm.getPortSpeed());
+            KWPHandler.setKWPDevice(m_elm327Device);
+            initializeKWPDevice();
+
+        }
+
+        public void initializeKWPDevice()
+        {
             kwpHandler = KWPHandler.getInstance();
             T7Flasher.setKWPHandler(kwpHandler);
             m_t7Flasher = T7Flasher.getInstance();
@@ -320,7 +342,6 @@ namespace T7Tool
             string immo;
             string engineType;
             string swVersion;
-            int e85level;
             KWPResult res = kwpHandler.getVIN(out vin);
             if (res == KWPResult.OK)
                 ecuVINTextBox.Text = vin;

@@ -140,7 +140,7 @@ namespace T7Tool.KWP
             {
                 res = LAWICEL.canusb_Close(m_deviceHandle);
             }
-            catch(DllNotFoundException e)
+            catch(DllNotFoundException)
             {
                 return CloseResult.CloseError;
             }
