@@ -6,11 +6,17 @@ using System.Threading;
 
 namespace T7Tool.KWP
 {
+    /// <summary>
+    /// KLineDevice implements a sub set of ISO 14230-2. It works with interface adapters
+    /// that do electrical transformation between RS232 and K-Line (like the VAGCOM interface) including
+    /// devices that has built-in USB-RS232 adapter.
+    /// </summary>
     class KLineDevice: IKWPDevice
     {
 
         bool m_deviceIsOpen = false;
         SerialPort m_serialPort = new SerialPort();
+        string m_portName = "";
 
         /// <summary>
         /// Constructor for ELM327Device.
@@ -20,6 +26,12 @@ namespace T7Tool.KWP
           
         }
 
+        public void setPort(string a_portName)
+        {
+            m_portName = a_portName;
+        }
+
+
         /// <summary>
         /// This method starts a new KWP session. It must be called before the sendRequest
         /// method can be called.
@@ -27,12 +39,45 @@ namespace T7Tool.KWP
         /// <returns>true on success, otherwise false.</returns>
         public bool startSession()
         {
-            string str = "";
-           // m_serialPort.Write("AT IIA 11\r"); //Set ISO init address to 0x11
-           // m_serialPort.ReadTo(">");
+            Thread.Sleep(300);                  //Bus idle 300 ms before initialization
+            m_serialPort.BaudRate = 360;
+            m_serialPort.DataBits = 8;
+            byte[] sendByte = new byte[1];
+            sendByte[0] = 0;
+            try
+            {
+                m_serialPort.Write(sendByte, 0, 1);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            //Sending 0x0 at 360 baud will take about 25 ms
+            //Now wait 25 ms
+            Thread.Sleep(25);
+            m_serialPort.BaudRate = 10400;
+            //Time to send Start Communication Request
+            //Start request is always 3 byte header
+            byte[] startRequest = new byte[5];
+            startRequest[0] = 0x81;     //Format byte, physical addressing, one byte of data
+            startRequest[1] = 0x11;     //Target address, T7 ECU
+            startRequest[2] = 0xF1;     //Source address, tester
+            startRequest[3] = 0x81;     //Start request service ID
+            startRequest[4] = calculateChecksum(startRequest, 0, startRequest.Length - 1);
 
-           // m_serialPort.Write("AT SH CF A1 F1\r");    //Set header
-           // str = m_serialPort.ReadTo(">");
+            byte[] response = new byte[8];
+            try
+            {
+                m_serialPort.Write(startRequest, 0, startRequest.Length);
+                m_serialPort.Read(response, 0, 8);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            if (response[4] != 0xC1)        //C1 is positive response ID
+                return false;
+            m_deviceIsOpen = true;
             return true;
         }
 
@@ -47,48 +92,48 @@ namespace T7Tool.KWP
         /// <returns>RequestResult.</returns>
         public RequestResult sendRequest(KWPRequest a_request, out KWPReply r_reply)
         {
-            /* string sendString = "";
-             string receiveString = "";
-             for (int i = 1; i < a_request.getData().Length; i++)
-                 sendString += a_request.getData()[i].ToString("X") + " ";
-             sendString += "\r";
-             m_serialPort.Write(sendString);
-             //receiveString = "49 01 01 00 00 00 31 \n\r49 02 02 44 34 47 50 \n\r49 02 03 30 30 52 35 \n\r49 02 04 25 42";// m_serialPort.ReadTo(">");
-             receiveString = m_serialPort.ReadTo(">");
-             char[] chrArray = receiveString.ToCharArray();
-             byte[] reply = new byte[0xFF];
-             int insertPos = 1;
-             int index = 0;
-             string subString = "";
-             while(receiveString.Length > 4)
-             {
-                 //Remove first three bytes
 
-                 //TODO. Remove Mode and PIDs
-                 for (int i = 0; i < 3; i++)
-                 {
-                     index = receiveString.IndexOf(" ");
-                     receiveString = receiveString.Remove(0, index + 1);
-                 }
-                 //Read data for the rest of the row.
-                 for (int i = 0; i < 4; i++)
-                 {
-                     index = receiveString.IndexOf(" ");
-                     if (index == 0) //Last row not 4 bytes of data.
-                     {
-                         continue;
-                     }
-                     subString = receiveString.Substring(0, index);
-                     reply[insertPos] = (byte)Convert.ToInt16("0x"+subString, 16);
-                     insertPos++;
-                     receiveString = receiveString.Remove(0, index + 1);
-                 }
+            //The length of the request is Fmt + Src + Tgt + Len + Data + CRC
+            //Len is included in KWPRequest.getData() (first byte)
+            byte[] request = new byte[1 + 1 + 1 + a_request.getData().Length + 1];
+            byte[] responseHeader = new byte[4];
+            byte[] responseData;
+            request[0] = 0x80;             //Format byte
+            request[1] = 0x11;             //Adress of T7 ECU
+            request[2] = 0xF1;             //Tester address
+            for (int i = 0; i < a_request.getData().Length; i++)
+                request[i + 3] = a_request.getData()[i];
+            request[request.Length - 1] = calculateChecksum(request, 0, request.Length - 1);
+            int length = 0;
+            byte checksum = 0;
+            try
+            {
+                m_serialPort.Write(request, 0, request.Length);
 
-             }
-             
-            reply[0] = (byte)insertPos; //Length
-            */
-            r_reply = new KWPReply();
+                //Start by reading header to find out how many bytes to read
+                m_serialPort.Read(responseHeader, 0, 4);
+                length = responseHeader[3];
+                responseData = new byte[length + 1];        // Add 1 for checksum
+                m_serialPort.Read(responseData, 0, responseData.Length);
+            }
+            catch (Exception)
+            {
+                r_reply = new KWPReply();
+                return RequestResult.ErrorSending;
+            }
+           
+            byte[] reply = new byte[length + 1];
+            reply[0] = responseHeader[3];               //Length
+            for (int i = 0; i < responseData.Length - 1; i++)
+                reply[i + 1] = responseData[i];
+
+            if ((byte)checksum != responseData[responseData.Length - 1])
+            {
+                r_reply = new KWPReply();
+                return RequestResult.ErrorReceiving;
+            }
+            checksum = calculateChecksum(reply, 0, reply.Length - 1);
+            r_reply = new KWPReply(reply, a_request.getNrOfPID());
             return RequestResult.NoError;
         }
 
@@ -98,59 +143,28 @@ namespace T7Tool.KWP
         /// <returns>true on success, otherwise false.</returns>
         public bool open()
         {
-            
-            //Detect all serial ports.
-            string[] serialPortNames = SerialPort.GetPortNames();
-            m_serialPort.BaudRate = 9600;
+            m_serialPort.BaudRate = 10400;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
-            bool readException = false;
-
-            //Check if a K-Line adapter is connected to any port.
-            foreach (string port in serialPortNames)
+            m_serialPort.Parity = Parity.None;
+            m_serialPort.StopBits = StopBits.One;
+            m_serialPort.DtrEnable = true;
+            m_serialPort.RtsEnable = true;
+            m_serialPort.PortName = m_portName;
+            
+            if (m_serialPort.IsOpen)
+                m_serialPort.Close();
+            
+            try
             {
-                readException = false;
-                if (m_serialPort.IsOpen)
-                    m_serialPort.Close();
-                m_serialPort.PortName = port;
-
-                try
-                {
-                    m_serialPort.Open();
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    return false;
-                }
-                    
-                m_serialPort.Write("ATZ\r");    //Reset all
-                Thread.Sleep(3000);
-
-                //Try to set up ELM327
-                try
-                {
-                    m_serialPort.ReadTo(">");
-                }
-                catch(Exception)
-                {
-                    readException = true;
-                }
-                if (readException)
-                    continue;
-                m_serialPort.Write("ATL1\r");   //Linefeeds On
-                m_serialPort.ReadTo(">");       
-                m_serialPort.Write("ATE0\r");   //Echo off
-                m_serialPort.ReadTo(">");
-                m_serialPort.Write("ATI\r");    //Print version
-                string answer = m_serialPort.ReadTo(">");
-                if (answer.StartsWith("ELM327 v1.2"))
-                {
-                    m_deviceIsOpen = true;
-                    return true;
-                }
-
+                m_serialPort.Open();
             }
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -170,6 +184,14 @@ namespace T7Tool.KWP
         public bool isOpen()
         {
             return m_deviceIsOpen;
+        }
+
+        private byte calculateChecksum(byte[] a_data, int a_index, int a_length)
+        {
+            byte cs = 0;
+            for (int i = a_index; i < a_length; i++)
+                cs = (byte) ((a_data[i] + cs) % 256);
+            return cs;
         }
     }
 }

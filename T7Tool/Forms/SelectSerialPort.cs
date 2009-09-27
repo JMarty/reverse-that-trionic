@@ -15,6 +15,7 @@ namespace T7Tool.Forms
         private string m_serialPort = "";
         private int m_portSpeed = 9600;
         private T7Tool m_t7tool = null;
+        private string m_device = "";
 
 
         public SelectSerialPort()
@@ -37,6 +38,17 @@ namespace T7Tool.Forms
             m_t7tool = a_t7tool;
         }
 
+        public void disablePortSpeed()
+        {
+            label1.Hide();
+            radioButton38400.Hide();
+            radioButton9600.Hide();
+        }
+
+        public void setDevice(string a_device)
+        {
+            m_device = a_device;
+        }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -61,7 +73,10 @@ namespace T7Tool.Forms
                 m_portSpeed = 38400;
             else
                 m_portSpeed = 9600;
-            m_t7tool.startELM327();
+            if(m_device.StartsWith("KLine"))
+                m_t7tool.startKLine();
+            else
+                m_t7tool.startELM327();
             
         }
 

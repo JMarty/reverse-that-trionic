@@ -263,6 +263,8 @@ namespace T7Tool
 
         private void kwpDeviceOpenButton_Click(object sender, EventArgs e)
         {
+            if (m_serialPortForm == null)
+                m_serialPortForm = new SelectSerialPort();
 
             kwpDeviceConnectionStatus.Text = "Connecting";
             kwpDeviceConnectionStatus.Refresh();
@@ -276,20 +278,32 @@ namespace T7Tool
             }
             else if (kwpDeviceComboBox.SelectedItem.ToString() == "ELM327 1.2")
             {
-                
-                if (m_serialPortForm == null)
-                    m_serialPortForm = new SelectSerialPort();
                 m_serialPortForm.setCallbackObject(this);
                 m_serialPortForm.Show();
                 
             }
             else if (kwpDeviceComboBox.SelectedItem.ToString() == "K-Line")
             {
-                if (m_kLineDevice == null)
-                    m_kLineDevice = new KLineDevice();
-                KWPHandler.setKWPDevice(m_kLineDevice);
+                m_serialPortForm.setCallbackObject(this);
+                m_serialPortForm.disablePortSpeed();
+                m_serialPortForm.setDevice("KLine");
+                m_serialPortForm.Show();
 
             }
+
+        }
+
+
+        public void startKLine()
+        {
+            m_serialPortForm.Hide();
+            this.Show();
+            this.Update();
+            if (m_kLineDevice == null)
+                m_kLineDevice = new KLineDevice();
+            m_kLineDevice.setPort(m_serialPortForm.getPortName());
+            KWPHandler.setKWPDevice(m_kLineDevice);
+            initializeKWPDevice();
 
         }
 

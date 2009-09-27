@@ -125,10 +125,6 @@ namespace T7Tool.KWP
         /// <returns>true on success, otherwise false.</returns>
         public bool open()
         {
-            //Automatically find port with ELM327
-            
-            //Detect all serial ports.
-            string[] serialPortNames = SerialPort.GetPortNames();
             m_serialPort.BaudRate = m_portSpeed;
             m_serialPort.Handshake = Handshake.None;
             m_serialPort.ReadTimeout = 3000;
